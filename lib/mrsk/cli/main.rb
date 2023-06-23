@@ -137,9 +137,9 @@ class Mrsk::Cli::Main < Mrsk::Cli::Base
       puts "Created configuration file in config/deploy.yml"
     end
 
-    unless (deploy_file = Pathname.new(File.expand_path(".env"))).exist?
+    unless (deploy_file = Pathname.new(File.expand_path(options[:env_path]))).exist?
       FileUtils.cp_r Pathname.new(File.expand_path("templates/template.env", __dir__)), deploy_file
-      puts "Created .env file"
+      puts "Created #{options[:env_path]} file"
     end
 
     unless (hooks_dir = Pathname.new(File.expand_path(".mrsk/hooks"))).exist?
@@ -169,10 +169,10 @@ class Mrsk::Cli::Main < Mrsk::Cli::Base
   def envify
     if destination = options[:destination]
       env_template_path = options[:template] || ".env.#{destination}.erb"
-      env_path          = ".env.#{destination}"
+      env_path          = "#{options[:env_path]}.#{destination}"
     else
       env_template_path = options[:template] || ".env.erb"
-      env_path          = ".env"
+      env_path          = options[:env_path]
     end
 
     ENV["MRSK_DESTINATION"] = destination.to_s if destination
