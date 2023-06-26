@@ -1,3 +1,5 @@
+require 'fileutils'
+
 class Mrsk::Cli::Main < Mrsk::Cli::Base
   desc "setup", "Setup all accessories and deploy app to servers"
   def setup
@@ -167,12 +169,16 @@ class Mrsk::Cli::Main < Mrsk::Cli::Base
   desc "envify", "Create .env by evaluating .env.erb (or .env.staging.erb -> .env.staging when using -d staging)"
   option :template, aliases: "-t", type: :string, desc: "Template to use"
   def envify
-    if destination = options[:destination]
+    if (destination = options[:destination])
       env_template_path = options[:template] || ".env.#{destination}.erb"
       env_path          = "#{options[:env_path]}.#{destination}"
     else
       env_template_path = options[:template] || ".env.erb"
       env_path          = options[:env_path]
+    end
+
+    unless File.exist?(env_path) && env_path.include?('/')
+      FileUtils.mkdir_p(File.dirname(env_path))
     end
 
     ENV["MRSK_DESTINATION"] = destination.to_s if destination
