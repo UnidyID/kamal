@@ -181,7 +181,7 @@ class Mrsk::Cli::Main < Mrsk::Cli::Base
 
     ENV["MRSK_DESTINATION"] = destination.to_s if destination
     output = ERB.new(File.read(env_template_path)).result
-    output = output..gsub(/(?<=\n)\s+/, '').gsub(/\n{3,}/, "\n\n")
+    output = output.gsub(/(?<=\n)\s+/, '').gsub(/\n{3,}/, "\n\n")
 
     File.write(env_path, output, perm: 0600)
   end
