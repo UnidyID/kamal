@@ -180,7 +180,10 @@ class Mrsk::Cli::Main < Mrsk::Cli::Base
     end
 
     ENV["MRSK_DESTINATION"] = destination.to_s if destination
-    File.write(env_path, ERB.new(File.read(env_template_path)).result, perm: 0600)
+    output = ERB.new(File.read(env_template_path)).result
+    output = output..gsub(/(?<=\n)\s+/, '').gsub(/\n{3,}/, "\n\n")
+
+    File.write(env_path, output, perm: 0600)
   end
 
   desc "remove", "Remove Traefik, app, accessories, and registry session from servers"
