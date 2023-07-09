@@ -345,6 +345,14 @@ class CliMainTest < CliTestCase
     run_command("envify")
   end
 
+  test "envify with bad formatting in ERB" do
+    # should filter out more than 1 blank line + leading whitespace
+    File.expects(:read).with(".env.erb").returns("  HELLO=<%= 'world' %>\n HELLO2=<%= 'world2' %>\n\n\nBAR=foo")
+    File.expects(:write).with(".env", "HELLO=world\nHELLO2=world2\n\nBAR=foo", perm: 0600)
+
+    run_command("envify")
+  end
+
   test "envify with env output" do
     File.expects(:read).with(".env.erb").returns("HELLO=<%= 'world' %>")
     File.expects(:write).with("dist/.env", "HELLO=world", perm: 0600)
