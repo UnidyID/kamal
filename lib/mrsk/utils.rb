@@ -30,8 +30,8 @@ module Mrsk::Utils
     secrets.to_h do |key|
       if key.end_with? '?'
         [ key.chop, ENV[key.chop] ]
-      elsif clear_env.key?(key)
-        [ key, clear_env[key] ]
+      elsif (index = clear_env.keys.index(key))
+        [ key, clear_env[index] ]
       else
         [ key, ENV.fetch(key) ]
       end
