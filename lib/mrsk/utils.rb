@@ -20,16 +20,18 @@ module Mrsk::Utils
   # but redacts and expands secrets.
   def argumentize_env_with_secrets(env)
     if (secrets = env["secret"]).present?
-      argumentize("-e", handle_optional_secrets(secrets), sensitive: true) + argumentize("-e", env["clear"])
+      argumentize("-e", handle_optional_secrets(secrets, env.fetch('clear', {})), sensitive: true) + argumentize("-e", env["clear"])
     else
       argumentize("-e", env.fetch("clear", env))
     end
   end
 
-  def handle_optional_secrets(secrets)
+  def handle_optional_secrets(secrets, clear_env)
     secrets.to_h do |key|
       if key.end_with? '?'
         [ key.chop, ENV[key.chop] ]
+      elsif clear_env.key?(key)
+        [ key, clear_env[key] ]
       else
         [ key, ENV.fetch(key) ]
       end
