@@ -3,6 +3,13 @@
 # Prevent failures from being reported twice.
 Thread.report_on_exception = false
 
+LOCAL_BIN = 'bin/mrsk'
+
+if File.exist?(LOCAL_BIN)
+  load LOCAL_BIN
+  exit
+end
+
 require "mrsk"
 
 begin
