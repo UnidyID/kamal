@@ -137,9 +137,9 @@ class Mrsk::Cli::Main < Mrsk::Cli::Base
       puts "Created configuration file in config/deploy.yml"
     end
 
-    unless (deploy_file = Pathname.new(File.expand_path(".env"))).exist?
+    unless (deploy_file = Pathname.new(File.expand_path(options[:env_path]))).exist?
       FileUtils.cp_r Pathname.new(File.expand_path("templates/template.env", __dir__)), deploy_file
-      puts "Created .env file"
+      puts "Created #{options[:env_path]} file"
     end
 
     unless (hooks_dir = Pathname.new(File.expand_path(".mrsk/hooks"))).exist?
@@ -165,16 +165,25 @@ class Mrsk::Cli::Main < Mrsk::Cli::Base
   end
 
   desc "envify", "Create .env by evaluating .env.erb (or .env.staging.erb -> .env.staging when using -d staging)"
+  option :template, aliases: "-t", type: :string, desc: "Template to use"
   def envify
-    if destination = options[:destination]
-      env_template_path = ".env.#{destination}.erb"
-      env_path          = ".env.#{destination}"
+    if (destination = options[:destination])
+      env_template_path = options[:template] || ".env.#{destination}.erb"
+      env_path          = "#{options[:env_path]}.#{destination}"
     else
-      env_template_path = ".env.erb"
-      env_path          = ".env"
+      env_template_path = options[:template] || ".env.erb"
+      env_path          = options[:env_path]
     end
 
-    File.write(env_path, ERB.new(File.read(env_template_path)).result, perm: 0600)
+    unless File.exist?(env_path) && env_path.include?('/')
+      FileUtils.mkdir_p(File.dirname(env_path))
+    end
+
+    ENV["MRSK_DESTINATION"] = destination.to_s if destination
+    output = ERB.new(File.read(env_template_path)).result
+    output = output.gsub(/\n{3,}/, "\n\n").gsub(/^(?![\r\n])\s+/, '')
+
+    File.write(env_path, output, perm: 0600)
   end
 
   desc "remove", "Remove Traefik, app, accessories, and registry session from servers"

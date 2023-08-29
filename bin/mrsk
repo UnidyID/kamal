@@ -3,6 +3,10 @@
 # Prevent failures from being reported twice.
 Thread.report_on_exception = false
 
+require_relative '../lib/loader'
+p Loader.methods - Object.methods
+Loader::load_local_bin # local bin is found this command exists so the rest of the code doesn't run
+
 require "mrsk"
 
 begin

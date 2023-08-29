@@ -14,18 +14,19 @@ class Mrsk::Configuration
 
   class << self
     def create_from(config_file:, destination: nil, version: nil)
-      raw_config = load_config_files(config_file, *destination_config_file(config_file, destination))
+      raw_config = load_config_files(config_file, *destination_config_file(config_file, destination), destination: destination)
 
       new raw_config, destination: destination, version: version
     end
 
     private
-      def load_config_files(*files)
-        files.inject({}) { |config, file| config.deep_merge! load_config_file(file) }
+      def load_config_files(*files, destination: nil)
+        files.inject({}) { |config, file| config.deep_merge! load_config_file(file, destination) }
       end
 
-      def load_config_file(file)
+      def load_config_file(file, destination)
         if file.exist?
+          ENV["MRSK_DESTINATION"] = destination.to_s if destination
           YAML.load(ERB.new(IO.read(file)).result).symbolize_keys
         else
           raise "Configuration file not found in #{file}"
@@ -33,7 +34,12 @@ class Mrsk::Configuration
       end
 
       def destination_config_file(base_config_file, destination)
-        base_config_file.sub_ext(".#{destination}.yml") if destination
+        return unless destination
+
+        return base_config_file.sub(/\.yml$/, ".#{destination}.yml") if base_config_file.extname == ".yml"
+        return base_config_file.sub(/\.yml.erb$/, ".#{destination}.yml.erb") if base_config_file.extname == ".erb"
+
+        raise 'Unsupported config file extension. Please use .yml or .yml.erb'
       end
   end
 
@@ -145,7 +151,7 @@ class Mrsk::Configuration
 
 
   def healthcheck
-    { "path" => "/up", "port" => 3000, "max_attempts" => 7 }.merge(raw_config.healthcheck || {})
+    { "path" => "/up", "port" => 3000, "max_attempts" => 7, "initial_delay" => 0 }.merge(raw_config.healthcheck || {})
   end
 
   def readiness_delay
