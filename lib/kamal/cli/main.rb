@@ -150,9 +150,9 @@ class Kamal::Cli::Main < Kamal::Cli::Base
       puts "Created configuration file in config/deploy.yml"
     end
 
-    unless (deploy_file = Pathname.new(File.expand_path(".env"))).exist?
+    unless (deploy_file = Pathname.new(File.expand_path(options[:env_path]))).exist?
       FileUtils.cp_r Pathname.new(File.expand_path("templates/template.env", __dir__)), deploy_file
-      puts "Created .env file"
+      puts "Created #{options[:env_path]} file"
     end
 
     unless (hooks_dir = Pathname.new(File.expand_path(".kamal/hooks"))).exist?
@@ -181,10 +181,14 @@ class Kamal::Cli::Main < Kamal::Cli::Base
   def envify
     if destination = options[:destination]
       env_template_path = ".env.#{destination}.erb"
-      env_path          = ".env.#{destination}"
+      env_path          = "#{options[:env_path]}.#{destination}"
     else
       env_template_path = ".env.erb"
-      env_path          = ".env"
+      env_path          = options[:env_path]
+    end
+
+    unless File.exist?(env_path) && env_path.include?('/')
+      FileUtils.mkdir_p(File.dirname(env_path))
     end
 
     File.write(env_path, ERB.new(File.read(env_template_path)).result, perm: 0600)
