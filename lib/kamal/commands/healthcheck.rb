@@ -27,7 +27,7 @@ class Kamal::Commands::Healthcheck < Kamal::Commands::Base
   end
 
   def logs
-    pipe container_id, xargs(docker(:logs, "--tail", 50, "2>&1"))
+    pipe container_id, xargs(docker(:logs, "--tail", 200, "2>&1"))
   end
 
   def stop
