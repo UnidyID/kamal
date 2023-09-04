@@ -178,12 +178,13 @@ class Kamal::Cli::Main < Kamal::Cli::Base
   end
 
   desc "envify", "Create .env by evaluating .env.erb (or .env.staging.erb -> .env.staging when using -d staging)"
+  option :template, aliases: "-t", type: :string, desc: "Template to use"
   def envify
-    if destination = options[:destination]
-      env_template_path = ".env.#{destination}.erb"
+    if (destination = options[:destination])
+      env_template_path = options[:template] || ".env.#{destination}.erb"
       env_path          = "#{options[:env_path]}.#{destination}"
     else
-      env_template_path = ".env.erb"
+      env_template_path = options[:template] || ".env.erb"
       env_path          = options[:env_path]
     end
 
@@ -191,7 +192,10 @@ class Kamal::Cli::Main < Kamal::Cli::Base
       FileUtils.mkdir_p(File.dirname(env_path))
     end
 
-    File.write(env_path, ERB.new(File.read(env_template_path)).result, perm: 0600)
+    ENV["MRSK_DESTINATION"] = destination.to_s if destination
+    output = ERB.new(File.read(env_template_path)).result
+
+    File.write(env_path, output, perm: 0600)
   end
 
   desc "remove", "Remove Traefik, app, accessories, and registry session from servers"
