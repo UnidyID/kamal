@@ -192,7 +192,7 @@ class Kamal::Cli::Main < Kamal::Cli::Base
       FileUtils.mkdir_p(File.dirname(env_path))
     end
 
-    ENV["MRSK_DESTINATION"] = destination.to_s if destination
+    ENV["KAMAL_DESTINATION"] = destination.to_s if destination
     output = ERB.new(File.read(env_template_path)).result
 
     File.write(env_path, output, perm: 0600)
