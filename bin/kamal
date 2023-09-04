@@ -3,6 +3,11 @@
 # Prevent failures from being reported twice.
 Thread.report_on_exception = false
 
+unless $PROGRAM_NAME == 'bin/kamal'
+  require 'bin_loader'
+  BinLoader::load_local_bin
+end
+
 require "kamal"
 
 begin
