@@ -54,7 +54,7 @@ class Kamal::Cli::Build < Kamal::Cli::Base
 
   desc "create", "Create a build setup"
   def create
-    mutating do
+    mutating(without_lock: true) do
       run_locally do
         begin
           debug "Using builder: #{KAMAL.builder.name}"
