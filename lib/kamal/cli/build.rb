@@ -11,7 +11,7 @@ class Kamal::Cli::Build < Kamal::Cli::Base
 
   desc "push", "Build and push app image to registry"
   def push
-    mutating do
+    mutating(without_lock: true) do
       cli = self
 
       verify_local_dependencies

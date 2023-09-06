@@ -73,14 +73,14 @@ module Kamal::Cli
         puts "  Finished all in #{sprintf("%.1f seconds", runtime)}"
       end
 
-      def mutating
+      def mutating(without_lock: false)
         return yield if KAMAL.holding_lock?
 
         KAMAL.config.ensure_env_available
 
         run_hook "pre-connect"
 
-        acquire_lock
+        acquire_lock unless without_lock
 
         begin
           yield
@@ -88,13 +88,13 @@ module Kamal::Cli
           if KAMAL.hold_lock_on_error?
             error "  \e[31mDeploy lock was not released\e[0m"
           else
-            release_lock
+            release_lock unless without_lock
           end
 
           raise
         end
 
-        release_lock
+        release_lock unless without_lock
       end
 
       def acquire_lock
