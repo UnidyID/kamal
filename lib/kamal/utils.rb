@@ -1,7 +1,7 @@
 module Kamal::Utils
   extend self
 
-  DOLLAR_SIGN_WITHOUT_SHELL_EXPANSION_REGEX = /\$(?!{[^\}]*\})/
+  DOLLAR_SIGN_WITHOUT_SHELL_EXPANSION_REGEX = /\$(?!(?:\{[^}]*\}|\([^)]*\)))/
 
   # Return a list of escaped shell arguments using the same named argument against the passed attributes (hash or array).
   def argumentize(argument, attributes, sensitive: false)
