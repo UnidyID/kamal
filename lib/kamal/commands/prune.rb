@@ -15,7 +15,7 @@ class Kamal::Commands::Prune < Kamal::Commands::Base
 
   def containers(keep_last: 5)
     pipe \
-      docker(:ps, "-q", "-a", *service_filter, *stopped_containers_filters),
+      docker(:ps, "-q", "-a", *stopped_containers_filters), # removed *service_filter here since on some containers we break healtcheck containers
       "tail -n +#{keep_last + 1}",
       "while read container_id; do docker rm $container_id; done"
   end
