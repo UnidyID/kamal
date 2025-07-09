@@ -18,7 +18,9 @@ class Kamal::Configuration::Role
 
     @specialized_env = Kamal::Configuration::Env.new \
       config: specializations.fetch("env", {}),
-      secrets_file: File.join(config.host_env_directory, "roles", "#{container_prefix}.env"),
+      # The reason for doing this is that 2.7 handles secretes sightly differently so it's simpler to
+      # just do it here quick and do it properly when we jump to 2.7
+      secrets_file: File.join(config.host_env_directory, "roles", "#{config.destination}.env"),
       context: "servers/#{name}/env"
 
     @specialized_logging = Kamal::Configuration::Logging.new \

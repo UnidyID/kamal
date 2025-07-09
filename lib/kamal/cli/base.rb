@@ -37,9 +37,9 @@ module Kamal::Cli
 
       def load_env
         if destination = options[:destination]
-          Dotenv.overload(".env", ".env.#{destination}")
+          Dotenv.overload(".kamal/dist/.env.#{destination}")
         else
-          Dotenv.overload(".env")
+          raise "Dumbass, pass a destination"
         end
       end
 
@@ -82,7 +82,6 @@ module Kamal::Cli
           end
 
           commander.configure \
-            config_file: Pathname.new(File.expand_path(options[:config_file])),
             destination: options[:destination],
             version: options[:version]
 

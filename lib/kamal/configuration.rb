@@ -16,8 +16,15 @@ class Kamal::Configuration
   include Validation
 
   class << self
-    def create_from(config_file:, destination: nil, version: nil)
-      raw_config = load_config_files(config_file, *destination_config_file(config_file, destination))
+    def create_from(destination: nil, version: nil)
+      if destination.blank?
+        raise "Destination is required"
+      end
+
+      raw_config = load_config_files(
+        Pathname.new(File.expand_path("config/deploy/deploy.yml.erb")),
+        Pathname.new(File.expand_path("config/deploy/deploy.#{destination}.yml.erb"))
+      )
 
       new raw_config, destination: destination, version: version
     end

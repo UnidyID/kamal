@@ -183,16 +183,22 @@ class Kamal::Cli::Main < Kamal::Cli::Base
   option :skip_push, aliases: "-P", type: :boolean, default: false, desc: "Skip .env file push"
   def envify
     if destination = options[:destination]
-      env_template_path = ".env.#{destination}.erb"
-      env_path          = ".env.#{destination}"
+      env_template_path = "config/credentials/env.env.erb"
+      env_path          = ".kamal/dist/.env.#{destination}"
     else
+      raise "Nope..."
+
       env_template_path = ".env.erb"
       env_path          = ".env"
     end
 
     if Pathname.new(File.expand_path(env_template_path)).exist?
       # Ensure existing env doesn't pollute template evaluation
-      content = with_original_env { ERB.new(File.read(env_template_path), trim_mode: "-").result }
+      content = with_original_env do
+        ENV["KAMAL_DESTINATION"] = destination.to_s if destination
+        ERB.new(File.read(env_template_path), trim_mode: "-").result
+      end
+
       File.write(env_path, content, perm: 0600)
 
       unless options[:skip_push]
