@@ -22,7 +22,8 @@ class Kamal::Cli::Main < Kamal::Cli::Base
   desc "deploy", "Deploy app to servers"
   option :skip_push, aliases: "-P", type: :boolean, default: false, desc: "Skip image build and push"
   def deploy
-    runtime = print_runtime do
+    started_at = Time.now
+    print_runtime do
       invoke_options = deploy_options
 
       say "Log into image registry...", :magenta
@@ -36,29 +37,35 @@ class Kamal::Cli::Main < Kamal::Cli::Base
         invoke "kamal:cli:build:deliver", [], invoke_options
       end
 
-      with_lock do
-        run_hook "pre-deploy"
+      begin
+        with_lock do
+          run_hook "pre-deploy"
 
-        say "Ensure Traefik is running...", :magenta
-        invoke "kamal:cli:traefik:boot", [], invoke_options
+          say "Ensure Traefik is running...", :magenta
+          invoke "kamal:cli:traefik:boot", [], invoke_options
 
-        say "Detect stale containers...", :magenta
-        invoke "kamal:cli:app:stale_containers", [], invoke_options.merge(stop: true)
+          say "Detect stale containers...", :magenta
+          invoke "kamal:cli:app:stale_containers", [], invoke_options.merge(stop: true)
 
-        invoke "kamal:cli:app:boot", [], invoke_options
+          invoke "kamal:cli:app:boot", [], invoke_options
 
-        say "Prune old containers and images...", :magenta
-        invoke "kamal:cli:prune:all", [], invoke_options
+          run_hook "post-deploy", runtime: (Time.now - started_at).round
+
+          say "Prune old containers and images...", :magenta
+          invoke "kamal:cli:prune:all", [], invoke_options
+        end
+      rescue => e
+        run_hook "post-deploy-failed"
+        raise
       end
     end
-
-    run_hook "post-deploy", runtime: runtime.round
   end
 
   desc "redeploy", "Deploy app to servers without bootstrapping servers, starting Traefik, pruning, and registry login"
   option :skip_push, aliases: "-P", type: :boolean, default: false, desc: "Skip image build and push"
   def redeploy
-    runtime = print_runtime do
+    started_at = Time.now
+    print_runtime do
       invoke_options = deploy_options
 
       if options[:skip_push]
@@ -69,17 +76,22 @@ class Kamal::Cli::Main < Kamal::Cli::Base
         invoke "kamal:cli:build:deliver", [], invoke_options
       end
 
-      with_lock do
-        run_hook "pre-deploy"
+      begin
+        with_lock do
+          run_hook "pre-deploy"
 
-        say "Detect stale containers...", :magenta
-        invoke "kamal:cli:app:stale_containers", [], invoke_options.merge(stop: true)
+          say "Detect stale containers...", :magenta
+          invoke "kamal:cli:app:stale_containers", [], invoke_options.merge(stop: true)
 
-        invoke "kamal:cli:app:boot", [], invoke_options
+          invoke "kamal:cli:app:boot", [], invoke_options
+
+          run_hook "post-deploy", runtime: (Time.now - started_at).round
+        end
+      rescue => e
+        run_hook "post-deploy-failed"
+        raise
       end
     end
-
-    run_hook "post-deploy", runtime: runtime.round
   end
 
   desc "rollback [VERSION]", "Rollback app to VERSION"
